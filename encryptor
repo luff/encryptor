@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# https://github.com/luff/encryptor
+#
+
+wd=$(cd $(dirname $0) && pwd)
+
+template=$wd/decrypt_wrapper
+
+usage() {
+  echo "Usage: $0 -s <script-to-encrypt> [-p <password>]" >&2
+  exit 1
+}
+
+while getopts ":s:p:" o; do
+  case "${o}" in
+    s) script=${OPTARG} ;;
+    p) passwd=${OPTARG} ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [[ -z $script || -z $passwd ]]; then
+  usage
+fi
+
+main() {
+  insert_line=$(grep -nm1 EOF $template | cut -d: -f1)
+  head $template -n $insert_line
+  openssl enc \
+    -aes-256-cbc \
+    -a \
+    -salt \
+    -in $script \
+    -k $passwd
+  tail $template -n +$((insert_line+1))
+}
+
+main
+

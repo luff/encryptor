@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# https://github.com/luff/encryptor
+#
+
+if [[ -z $password ]]; then
+  read -p Password: -s password
+  echo
+fi
+
+decrypted() {
+cat << \
+EOF | openssl enc -aes-256-cbc -a -d -k $password 
+EOF
+}
+
+first_line=$(decrypted 2>&1 | head -1)
+if [[ $first_line == 'bad decrypt' ]]; then
+  echo 'Password does not match. Bye!'
+  exit 1
+fi
+
+decrypted
+
